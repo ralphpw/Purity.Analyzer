@@ -94,4 +94,16 @@ public static class DiagnosticDescriptors
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true,
         helpLinkUri: $"{HelpLinkBase}#pur007");
+
+    /// <summary>
+    /// PUR011: Method is whitelisted but marked for review.
+    /// </summary>
+    public static readonly DiagnosticDescriptor PUR011 = new(
+        id: "PUR011",
+        title: "Method pending purity review",
+        messageFormat: "Method '{0}' calls '{1}' which is marked for review",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: true,
+        helpLinkUri: $"{HelpLinkBase}#pur011");
 }

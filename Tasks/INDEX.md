@@ -36,9 +36,9 @@ Implementation tasks for Purity.Analyzer.
 
 | Task | Estimate | Status | Suggested LLM | Description |
 |------|----------|--------|---------------|-------------|
-| [TASK-009](TASK-009-PUR005-Mutable-Return.md) | 4h | Not Started | Sonnet | Implement PUR005 (mutable returns) |
-| [TASK-010](TASK-010-PUR006-Parameter-Mutation.md) | 3h | Not Started | Sonnet | Implement PUR006 (param mutation) |
-| [TASK-011](TASK-011-PUR007-Ref-Out-Params.md) | 2h | Not Started | Sonnet | Implement PUR007 (ref/out params) |
+| [TASK-009](TASK-009-PUR005-Mutable-Return.md) | 4h | ✅ Done | Sonnet | Implement PUR005 (mutable returns) |
+| [TASK-010](TASK-010-PUR006-Parameter-Mutation.md) | 3h | ✅ Done | Sonnet | Implement PUR006 (param mutation) |
+| [TASK-011](TASK-011-PUR007-Ref-Out-Params.md) | 2h | ✅ Done | Sonnet | Implement PUR007 (ref/out params) |
 | [TASK-018](TASK-018-User-Configuration.md) | 6h | Not Started | **Opus** | User config & trust modes |
 | [TASK-016](TASK-016-Announce.md) | 2h | Not Started | Sonnet | Announce v0.2.0 |
 

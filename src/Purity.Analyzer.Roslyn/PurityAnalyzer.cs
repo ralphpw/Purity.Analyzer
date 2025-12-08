@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Purity.Analyzer.Configuration;
 
 namespace Purity.Analyzer;
 
@@ -68,7 +69,8 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
         DiagnosticDescriptors.PUR004,
         DiagnosticDescriptors.PUR005,
         DiagnosticDescriptors.PUR006,
-        DiagnosticDescriptors.PUR007
+        DiagnosticDescriptors.PUR007,
+        DiagnosticDescriptors.PUR011
     ];
 
     public override void Initialize(AnalysisContext context)
@@ -76,12 +78,18 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
 
-        context.RegisterSyntaxNodeAction(
-            AnalyzeMethod,
-            SyntaxKind.MethodDeclaration);
+        // Use compilation start to load config once per compilation
+        context.RegisterCompilationStartAction(compilationContext =>
+        {
+            var config = ConfigurationLoader.Load(compilationContext.Options.AdditionalFiles);
+
+            compilationContext.RegisterSyntaxNodeAction(
+                nodeContext => AnalyzeMethod(nodeContext, config),
+                SyntaxKind.MethodDeclaration);
+        });
     }
 
-    private static void AnalyzeMethod(SyntaxNodeAnalysisContext context)
+    private static void AnalyzeMethod(SyntaxNodeAnalysisContext context, PurityConfig config)
     {
         var methodDeclaration = (MethodDeclarationSyntax)context.Node;
         var methodSymbol = context.SemanticModel.GetDeclaredSymbol(methodDeclaration);
@@ -93,7 +101,7 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
             return;
 
         CheckForFieldMutation(context, methodDeclaration, methodSymbol);
-        CheckForNonPureCalls(context, methodDeclaration, methodSymbol);
+        CheckForNonPureCalls(context, methodDeclaration, methodSymbol, config);
         CheckForIoOperations(context, methodDeclaration, methodSymbol);
         CheckForNonDeterministicApis(context, methodDeclaration, methodSymbol);
         CheckForMutableReturnType(context, methodDeclaration, methodSymbol);
@@ -159,11 +167,13 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
     /// PUR002: Detects calls to non-pure methods within pure methods.
     /// A method is considered pure if it has [EnforcedPure], [Pure], or is in the BCL whitelist.
     /// Skips invocations already covered by PUR003 (I/O) or PUR004 (non-deterministic).
+    /// Also emits PUR011 for methods marked for review.
     /// </summary>
     private static void CheckForNonPureCalls(
         SyntaxNodeAnalysisContext context,
         MethodDeclarationSyntax method,
-        IMethodSymbol methodSymbol)
+        IMethodSymbol methodSymbol,
+        PurityConfig config)
     {
         foreach (var invocation in method.DescendantNodes().OfType<InvocationExpressionSyntax>())
         {
@@ -172,7 +182,20 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
             if (calledSymbol is null)
                 continue;
 
-            if (IsCalledMethodPure(calledSymbol))
+            var signature = BuildMethodSignature(calledSymbol);
+            var purityResult = IsCalledMethodPure(calledSymbol, signature, config, context.Compilation);
+
+            // Check for review-required methods (PUR011)
+            if (purityResult.IsPure && purityResult.IsReviewRequired)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(
+                    DiagnosticDescriptors.PUR011,
+                    invocation.GetLocation(),
+                    methodSymbol.Name,
+                    calledSymbol.ToDisplayString(SymbolDisplayFormat.CSharpShortErrorMessageFormat)));
+            }
+
+            if (purityResult.IsPure)
                 continue;
 
             // Skip if already covered by PUR003 (I/O) or PUR004 (non-deterministic)
@@ -200,8 +223,24 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
             // Check property getters
             if (symbol is IPropertySymbol propertySymbol)
             {
-                if (propertySymbol.GetMethod is { } getter && !IsCalledMethodPure(getter))
+                if (propertySymbol.GetMethod is { } getter)
                 {
+                    var getterSignature = BuildMethodSignature(getter);
+                    var getterPurity = IsCalledMethodPure(getter, getterSignature, config, context.Compilation);
+
+                    // Check for review-required (PUR011)
+                    if (getterPurity.IsPure && getterPurity.IsReviewRequired)
+                    {
+                        context.ReportDiagnostic(Diagnostic.Create(
+                            DiagnosticDescriptors.PUR011,
+                            memberAccess.GetLocation(),
+                            methodSymbol.Name,
+                            propertySymbol.ToDisplayString(SymbolDisplayFormat.CSharpShortErrorMessageFormat)));
+                    }
+
+                    if (getterPurity.IsPure)
+                        continue;
+
                     // Skip if property is whitelisted (constants like Math.PI)
                     var propertySignature = BuildPropertySignature(propertySymbol);
                     if (PurityWhitelist.IsWhitelisted(propertySignature))
@@ -224,25 +263,105 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
     }
 
     /// <summary>
-    /// Determines whether a called method is pure (has purity attribute or is whitelisted).
+    /// Result of purity check including whether the method is marked for review.
     /// </summary>
-    private static bool IsCalledMethodPure(IMethodSymbol method)
+    private readonly struct PurityCheckResult
+    {
+        public bool IsPure { get; }
+        public bool IsReviewRequired { get; }
+
+        private PurityCheckResult(bool isPure, bool isReviewRequired)
+        {
+            IsPure = isPure;
+            IsReviewRequired = isReviewRequired;
+        }
+
+        public static PurityCheckResult Pure() => new(true, false);
+        public static PurityCheckResult PureWithReview() => new(true, true);
+        public static PurityCheckResult NotPure() => new(false, false);
+    }
+
+    /// <summary>
+    /// Determines whether a called method is pure based on attributes, whitelist, and config.
+    /// </summary>
+    private static PurityCheckResult IsCalledMethodPure(
+        IMethodSymbol method,
+        string signature,
+        PurityConfig config,
+        Compilation compilation)
+    {
+        // User exclude always wins - method is NOT pure
+        if (PatternMatcher.MatchesAny(signature, config.Whitelist.Exclude))
+            return PurityCheckResult.NotPure();
+
+        // User include is always trusted
+        if (PatternMatcher.MatchesAny(signature, config.Whitelist.Include))
+        {
+            var isReviewRequired = config.ReviewRequired.Contains(signature)
+                                   || PatternMatcher.MatchesAny(signature, config.ReviewRequired);
+            return isReviewRequired ? PurityCheckResult.PureWithReview() : PurityCheckResult.Pure();
+        }
+
+        // Apply trust mode
+        return config.TrustMode switch
+        {
+            TrustMode.Standard => IsMethodPureStandard(method, signature),
+            TrustMode.Strict => IsMethodPureStrict(method, signature, compilation),
+            TrustMode.ZeroTrust => PurityCheckResult.NotPure(), // Only user whitelist trusted
+            _ => IsMethodPureStandard(method, signature)
+        };
+    }
+
+    /// <summary>
+    /// Standard mode: trusts BCL whitelist and [EnforcedPure] in any assembly.
+    /// </summary>
+    private static PurityCheckResult IsMethodPureStandard(IMethodSymbol method, string signature)
     {
         // Check for purity attributes on the method itself
         if (HasPurityAttribute(method))
-            return true;
+            return PurityCheckResult.Pure();
 
         // Check for purity attributes on the containing type
         if (method.ContainingType is { } containingType && HasPurityAttribute(containingType))
-            return true;
+            return PurityCheckResult.Pure();
 
         // Check BCL whitelist with full signature
-        var signature = BuildMethodSignature(method);
         if (PurityWhitelist.IsWhitelisted(signature))
-            return true;
+            return PurityCheckResult.Pure();
 
-        return false;
+        return PurityCheckResult.NotPure();
     }
+
+    /// <summary>
+    /// Strict mode: trusts BCL whitelist and [EnforcedPure] only in current compilation.
+    /// </summary>
+    private static PurityCheckResult IsMethodPureStrict(
+        IMethodSymbol method,
+        string signature,
+        Compilation compilation)
+    {
+        // BCL whitelist is trusted
+        if (PurityWhitelist.IsWhitelisted(signature))
+            return PurityCheckResult.Pure();
+
+        // [EnforcedPure] only trusted if in current compilation
+        if (HasPurityAttribute(method) && IsInCurrentCompilation(method, compilation))
+            return PurityCheckResult.Pure();
+
+        // [EnforcedPure] on containing type only trusted if in current compilation
+        if (method.ContainingType is { } containingType
+            && HasPurityAttribute(containingType)
+            && IsInCurrentCompilation(containingType, compilation))
+            return PurityCheckResult.Pure();
+
+        return PurityCheckResult.NotPure();
+    }
+
+    /// <summary>
+    /// Determines if a symbol is defined in the current compilation (not a reference).
+    /// </summary>
+    private static bool IsInCurrentCompilation(ISymbol symbol, Compilation compilation) =>
+        SymbolEqualityComparer.Default.Equals(symbol.ContainingAssembly, compilation.Assembly);
 
     /// <summary>
     /// Symbol display format for CLR-style signatures (used for whitelist matching).
