@@ -47,7 +47,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Purity.Analyzer.Attributes\Purity.Analyzer.Attributes.csproj" />
+    <ProjectReference Include="..\Purity.Analyzer.Attributes\Purity.Analyzer.Attributes.csproj" PrivateAssets="none" />
   </ItemGroup>
 
   <ItemGroup>
@@ -58,7 +58,6 @@
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
     <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    <None Include="..\Purity.Analyzer.Attributes\bin\$(Configuration)\netstandard2.0\Purity.Analyzer.Attributes.dll" Pack="true" PackagePath="lib/netstandard2.0" Visible="false" />
   </ItemGroup>
 
 </Project>
