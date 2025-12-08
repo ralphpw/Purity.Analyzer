@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -15,6 +16,24 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
 {
     private const string EnforcedPureAttributeFullName = "Purity.Contracts.EnforcedPureAttribute";
     private const string BclPureAttributeFullName = "System.Diagnostics.Contracts.PureAttribute";
+
+    /// <summary>
+    /// Types whose members perform I/O operations and violate purity.
+    /// </summary>
+    private static readonly string[] IoTypePatterns =
+    [
+        "System.Console",
+        "System.IO.File",
+        "System.IO.Directory",
+        "System.IO.StreamReader",
+        "System.IO.StreamWriter",
+        "System.IO.FileStream",
+        "System.IO.BinaryReader",
+        "System.IO.BinaryWriter",
+        "System.Net.Http.HttpClient",
+        "System.Net.WebRequest",
+        "System.Net.WebClient",
+    ];
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
     [
@@ -47,6 +66,7 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
             return;
 
         CheckForFieldMutation(context, methodDeclaration, methodSymbol);
+        CheckForIoOperations(context, methodDeclaration, methodSymbol);
     }
 
     /// <summary>
@@ -101,6 +121,70 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
             fieldSymbol.Name);
 
         context.ReportDiagnostic(diagnostic);
+    }
+
+    /// <summary>
+    /// PUR003: Detects I/O operations within pure methods.
+    /// Catches calls to Console, File, Directory, Stream, and network types.
+    /// </summary>
+    private static void CheckForIoOperations(
+        SyntaxNodeAnalysisContext context,
+        MethodDeclarationSyntax method,
+        IMethodSymbol methodSymbol)
+    {
+        foreach (var invocation in method.DescendantNodes().OfType<InvocationExpressionSyntax>())
+        {
+            var calledSymbol = context.SemanticModel.GetSymbolInfo(invocation).Symbol as IMethodSymbol;
+
+            if (calledSymbol is null)
+                continue;
+
+            if (!IsIoOperation(calledSymbol))
+                continue;
+
+            var diagnostic = Diagnostic.Create(
+                DiagnosticDescriptors.PUR003,
+                invocation.GetLocation(),
+                methodSymbol.Name,
+                calledSymbol.ToDisplayString(SymbolDisplayFormat.CSharpShortErrorMessageFormat));
+
+            context.ReportDiagnostic(diagnostic);
+        }
+
+        // Also check object creations (e.g., new StreamReader("file.txt"))
+        foreach (var creation in method.DescendantNodes().OfType<ObjectCreationExpressionSyntax>())
+        {
+            var typeSymbol = context.SemanticModel.GetTypeInfo(creation).Type;
+
+            if (typeSymbol is null)
+                continue;
+
+            var typeName = typeSymbol.ToDisplayString();
+
+            if (!IoTypePatterns.Any(pattern => typeName.StartsWith(pattern)))
+                continue;
+
+            var diagnostic = Diagnostic.Create(
+                DiagnosticDescriptors.PUR003,
+                creation.GetLocation(),
+                methodSymbol.Name,
+                $"new {typeSymbol.Name}()");
+
+            context.ReportDiagnostic(diagnostic);
+        }
+    }
+
+    /// <summary>
+    /// Determines whether a method call is an I/O operation.
+    /// </summary>
+    private static bool IsIoOperation(IMethodSymbol method)
+    {
+        var containingType = method.ContainingType?.ToDisplayString();
+
+        if (containingType is null)
+            return false;
+
+        return IoTypePatterns.Any(pattern => containingType.StartsWith(pattern));
     }
 
     /// <summary>
