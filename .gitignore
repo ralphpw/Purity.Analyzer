@@ -3,6 +3,9 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+# Codacy CLI
+.codacy/
+
 # User-specific files
 *.rsuser
 *.suo
@@ -416,3 +419,7 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+
+#Ignore vscode AI rules
+.github/instructions/codacy.instructions.md
