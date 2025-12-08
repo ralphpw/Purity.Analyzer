@@ -12,8 +12,8 @@ Implementation tasks for Purity.Analyzer.
 |------|----------|--------|---------------|-------------|
 | [TASK-001](TASK-001-Initialize-Repository.md) | 1h | ✅ Done | Sonnet | Initialize repository and CI |
 | [TASK-002](TASK-002-Create-EnforcedPureAttribute.md) | 30m | ✅ Done | Sonnet | Create `[EnforcedPure]` attribute |
-| [TASK-003](TASK-003-Analyzer-Skeleton.md) | 2h | Not Started | **Opus** | Set up Roslyn analyzer skeleton |
-| [TASK-004](TASK-004-Test-Infrastructure.md) | 2h | Not Started | **Opus** | Set up unit test infrastructure |
+| [TASK-003](TASK-003-Analyzer-Skeleton.md) | 2h | ✅ Done | **Opus** | Set up Roslyn analyzer skeleton |
+| [TASK-004](TASK-004-Test-Infrastructure.md) | 2h | ✅ Done | **Opus** | Set up unit test infrastructure |
 | [TASK-005](TASK-005-PUR001-Field-Mutation.md) | 4h | Not Started | Sonnet | Implement PUR001 (field mutation) |
 | [TASK-007](TASK-007-PUR003-IO-Detection.md) | 3h | Not Started | Sonnet | Implement PUR003 (I/O detection) |
 | [TASK-008](TASK-008-PUR004-Non-Deterministic.md) | 3h | Not Started | Sonnet | Implement PUR004 (non-determinism) |

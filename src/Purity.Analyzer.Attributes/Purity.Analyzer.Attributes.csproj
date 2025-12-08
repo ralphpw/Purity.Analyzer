@@ -1,5 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- 
+    Attributes target netstandard2.0 to be consumable by any .NET project 
+    (.NET Framework 4.6.1+, .NET Core, .NET 5+, etc.).
+  -->
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>latest</LangVersion>

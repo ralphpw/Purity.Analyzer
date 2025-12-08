@@ -1,5 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- 
+    Roslyn analyzers MUST target netstandard2.0.
+    Analyzers run inside the compiler process, which loads plugins via netstandard2.0 for compatibility.
+    Targeting net8.0+ would break analyzer loading in Visual Studio, dotnet build, and older projects.
+  -->
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>latest</LangVersion>
