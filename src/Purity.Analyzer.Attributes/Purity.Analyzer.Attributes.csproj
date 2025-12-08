@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <IsPackable>true</IsPackable>
+    <PackageId>PurityAnalyzer</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>ralphpw</Authors>
+    <Description>Compile-time enforcement of functional purity in C#</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/ralphpw/Purity.Analyzer</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ralphpw/Purity.Analyzer</RepositoryUrl>
+    <PackageTags>roslyn;analyzer;purity;functional</PackageTags>
+  </PropertyGroup>
+
+</Project>

@@ -10,7 +10,7 @@ Implementation tasks for Purity.Analyzer.
 
 | Task | Estimate | Status | Suggested LLM | Description |
 |------|----------|--------|---------------|-------------|
-| [TASK-001](TASK-001-Initialize-Repository.md) | 1h | Not Started | Sonnet | Initialize repository and CI |
+| [TASK-001](TASK-001-Initialize-Repository.md) | 1h | ✅ Done | Sonnet | Initialize repository and CI |
 | [TASK-002](TASK-002-Create-EnforcedPureAttribute.md) | 30m | Not Started | Sonnet | Create `[EnforcedPure]` attribute |
 | [TASK-003](TASK-003-Analyzer-Skeleton.md) | 2h | Not Started | **Opus** | Set up Roslyn analyzer skeleton |
 | [TASK-004](TASK-004-Test-Infrastructure.md) | 2h | Not Started | **Opus** | Set up unit test infrastructure |
