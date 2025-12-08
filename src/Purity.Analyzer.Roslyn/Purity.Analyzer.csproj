@@ -10,8 +10,25 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-    <IsPackable>false</IsPackable>
     <IncludeBuildOutput>false</IncludeBuildOutput>
+  </PropertyGroup>
+
+  <!-- NuGet Package Configuration -->
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageId>Purity.Analyzer</PackageId>
+    <Version>0.2.0</Version>
+    <Authors>ralphpw</Authors>
+    <Description>Compile-time verification of functional purity in C#. Enforces that methods marked with [EnforcedPure] don't perform side effects, I/O, or call impure methods.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/ralphpw/Purity.Analyzer</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ralphpw/Purity.Analyzer</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>roslyn;analyzer;purity;functional;immutable;csharp;side-effects</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReleaseNotes>v0.2.0: Full purity verification with user configuration and trust modes</PackageReleaseNotes>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <NoPackageAnalysis>true</NoPackageAnalysis>
   </PropertyGroup>
 
   <ItemGroup>
@@ -37,7 +54,9 @@
     <EmbeddedResource Include="Resources\whitelist.csv" />
   </ItemGroup>
 
+  <!-- Package contents -->
   <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
     <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     <None Include="..\Purity.Analyzer.Attributes\bin\$(Configuration)\netstandard2.0\Purity.Analyzer.Attributes.dll" Pack="true" PackagePath="lib/netstandard2.0" Visible="false" />
   </ItemGroup>

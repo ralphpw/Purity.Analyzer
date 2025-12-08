@@ -8,16 +8,27 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
-    <IsPackable>true</IsPackable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <PackageId>PurityAnalyzer</PackageId>
-    <Version>0.1.0</Version>
+  </PropertyGroup>
+
+  <!-- NuGet Package Configuration -->
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageId>Purity.Analyzer.Attributes</PackageId>
+    <Version>0.2.0</Version>
     <Authors>ralphpw</Authors>
-    <Description>Compile-time enforcement of functional purity in C#</Description>
+    <Description>Attributes for Purity.Analyzer - compile-time verification of functional purity in C#. Use with the Purity.Analyzer package.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/ralphpw/Purity.Analyzer</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ralphpw/Purity.Analyzer</RepositoryUrl>
-    <PackageTags>roslyn;analyzer;purity;functional</PackageTags>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>roslyn;analyzer;purity;functional;attributes</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReleaseNotes>v0.2.0: Attributes for functional purity enforcement</PackageReleaseNotes>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
 </Project>
