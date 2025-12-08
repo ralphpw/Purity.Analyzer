@@ -25,6 +25,8 @@ Not a formal proof system—a useful guardrail. If 80% of purity bugs are caught
 dotnet add package Purity.Analyzer
 ```
 
+> **Build-time only:** The analyzer runs during compilation and does not ship with your application. Only the lightweight `Purity.Analyzer.Attributes.dll` (~5KB) is included in your output for attribute definitions.
+
 ```csharp
 using Purity.Contracts;
 

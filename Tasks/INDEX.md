@@ -27,5 +27,21 @@
 | TASK-009 | ✅ | PUR005 (mutable returns) |
 | TASK-010 | ✅ | PUR006 (param mutation) |
 | TASK-011 | ✅ | PUR007 (ref/out params) |
+| TASK-019 | ✅ | PUR008 (unsafe code) |
+| TASK-020 | ✅ | PUR009 (reflection) |
+| TASK-021 | ✅ | PUR010 (exception control flow) |
 | TASK-018 | ✅ | User config & trust modes |
 | TASK-016 | Not Started | Announce v0.2.0 |
+
+---
+
+## Future Features
+
+| Task | Priority | Description |
+|------|----------|-------------|
+| TASK-022 | Medium | Demo/Sample Project - Standalone project consuming NuGet package |
+| TASK-023 | High | Code Fixes - Auto-fix violations (add [EnforcedPure], convert Parse to TryParse, inject IClock) |
+| TASK-024 | Medium | Deep Data Flow Analysis - Track parameter mutations through method calls |
+| TASK-025 | Low | Auto-generate BCL Whitelist - Scrape .NET API docs to maintain whitelist |
+| TASK-026 | Low | Async Purity Model - Define purity semantics for Task<T> and async methods |
+
