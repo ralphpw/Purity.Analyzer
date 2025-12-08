@@ -46,8 +46,61 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
         if (!IsPureMethod(methodSymbol))
             return;
 
-        // Placeholder: future diagnostics (PUR001–PUR005) will be checked here
-        // Each diagnostic implementation will add analysis logic in subsequent tasks
+        CheckForFieldMutation(context, methodDeclaration, methodSymbol);
+    }
+
+    /// <summary>
+    /// PUR001: Detects field mutations within pure methods.
+    /// Catches assignments, increments, decrements, and compound assignments to fields.
+    /// </summary>
+    private static void CheckForFieldMutation(
+        SyntaxNodeAnalysisContext context,
+        MethodDeclarationSyntax method,
+        IMethodSymbol methodSymbol)
+    {
+        foreach (var descendant in method.DescendantNodes())
+        {
+            switch (descendant)
+            {
+                case AssignmentExpressionSyntax assignment:
+                    CheckFieldMutationTarget(context, assignment.Left, methodSymbol);
+                    break;
+
+                case PrefixUnaryExpressionSyntax prefix
+                    when prefix.IsKind(SyntaxKind.PreIncrementExpression)
+                      || prefix.IsKind(SyntaxKind.PreDecrementExpression):
+                    CheckFieldMutationTarget(context, prefix.Operand, methodSymbol);
+                    break;
+
+                case PostfixUnaryExpressionSyntax postfix
+                    when postfix.IsKind(SyntaxKind.PostIncrementExpression)
+                      || postfix.IsKind(SyntaxKind.PostDecrementExpression):
+                    CheckFieldMutationTarget(context, postfix.Operand, methodSymbol);
+                    break;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Reports PUR001 if the target expression is a field symbol.
+    /// </summary>
+    private static void CheckFieldMutationTarget(
+        SyntaxNodeAnalysisContext context,
+        ExpressionSyntax target,
+        IMethodSymbol methodSymbol)
+    {
+        var symbol = context.SemanticModel.GetSymbolInfo(target).Symbol;
+
+        if (symbol is not IFieldSymbol fieldSymbol)
+            return;
+
+        var diagnostic = Diagnostic.Create(
+            DiagnosticDescriptors.PUR001,
+            target.GetLocation(),
+            methodSymbol.Name,
+            fieldSymbol.Name);
+
+        context.ReportDiagnostic(diagnostic);
     }
 
     /// <summary>
