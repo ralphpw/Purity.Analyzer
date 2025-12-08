@@ -65,9 +65,33 @@ public static class DiagnosticDescriptors
     public static readonly DiagnosticDescriptor PUR005 = new(
         id: "PUR005",
         title: "Pure method returns mutable type",
-        messageFormat: "Method '{0}' marked as pure returns mutable type '{1}'",
+        messageFormat: "Method '{0}' marked as pure returns mutable type '{1}'. Consider using '{2}' instead.",
         category: Category,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true,
         helpLinkUri: $"{HelpLinkBase}#pur005");
+
+    /// <summary>
+    /// PUR006: Pure method mutates a parameter.
+    /// </summary>
+    public static readonly DiagnosticDescriptor PUR006 = new(
+        id: "PUR006",
+        title: "Pure method mutates parameter",
+        messageFormat: "Method '{0}' marked as pure mutates parameter '{1}'",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        helpLinkUri: $"{HelpLinkBase}#pur006");
+
+    /// <summary>
+    /// PUR007: Pure method has ref/out parameter.
+    /// </summary>
+    public static readonly DiagnosticDescriptor PUR007 = new(
+        id: "PUR007",
+        title: "Pure method has ref/out parameter",
+        messageFormat: "Method '{0}' marked as pure has {1} parameter '{2}'",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        helpLinkUri: $"{HelpLinkBase}#pur007");
 }

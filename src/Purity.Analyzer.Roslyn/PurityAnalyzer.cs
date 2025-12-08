@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -65,7 +66,9 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
         DiagnosticDescriptors.PUR002,
         DiagnosticDescriptors.PUR003,
         DiagnosticDescriptors.PUR004,
-        DiagnosticDescriptors.PUR005
+        DiagnosticDescriptors.PUR005,
+        DiagnosticDescriptors.PUR006,
+        DiagnosticDescriptors.PUR007
     ];
 
     public override void Initialize(AnalysisContext context)
@@ -93,6 +96,9 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
         CheckForNonPureCalls(context, methodDeclaration, methodSymbol);
         CheckForIoOperations(context, methodDeclaration, methodSymbol);
         CheckForNonDeterministicApis(context, methodDeclaration, methodSymbol);
+        CheckForMutableReturnType(context, methodDeclaration, methodSymbol);
+        CheckForParameterMutation(context, methodDeclaration, methodSymbol);
+        CheckForRefOutParameters(context, methodSymbol);
     }
 
     /// <summary>
@@ -553,4 +559,231 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
 
         return false;
     }
+
+    #region PUR005 - Mutable Return Types
+
+    /// <summary>
+    /// Maps mutable collection types to their immutable alternatives for diagnostic messages.
+    /// </summary>
+    private static readonly Dictionary<string, string> MutableToImmutable = new()
+    {
+        ["System.Collections.Generic.List"] = "ImmutableList<T>",
+        ["System.Collections.Generic.Dictionary"] = "ImmutableDictionary<TKey, TValue>",
+        ["System.Collections.Generic.HashSet"] = "ImmutableHashSet<T>",
+        ["System.Collections.Generic.Queue"] = "ImmutableQueue<T>",
+        ["System.Collections.Generic.Stack"] = "ImmutableStack<T>",
+        ["System.Collections.Generic.SortedSet"] = "ImmutableSortedSet<T>",
+        ["System.Collections.Generic.SortedDictionary"] = "ImmutableSortedDictionary<TKey, TValue>",
+        ["System.Collections.Generic.LinkedList"] = "ImmutableList<T>",
+        ["System.Collections.Generic.SortedList"] = "ImmutableSortedDictionary<TKey, TValue>",
+        ["System.Collections.ArrayList"] = "ImmutableList",
+        ["System.Collections.Hashtable"] = "ImmutableDictionary",
+    };
+
+    /// <summary>
+    /// PUR005: Detects mutable return types in pure methods.
+    /// Pure methods should not return mutable collections that callers could modify.
+    /// </summary>
+    private static void CheckForMutableReturnType(
+        SyntaxNodeAnalysisContext context,
+        MethodDeclarationSyntax method,
+        IMethodSymbol methodSymbol)
+    {
+        var returnType = methodSymbol.ReturnType;
+
+        // Check for array types
+        if (returnType is IArrayTypeSymbol arrayType)
+        {
+            var elementType = arrayType.ElementType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+            context.ReportDiagnostic(Diagnostic.Create(
+                DiagnosticDescriptors.PUR005,
+                method.ReturnType.GetLocation(),
+                methodSymbol.Name,
+                returnType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat),
+                $"ImmutableArray<{elementType}>"));
+            return;
+        }
+
+        // Check for mutable collection types
+        if (returnType is INamedTypeSymbol namedType)
+        {
+            var originalDef = namedType.OriginalDefinition.ToDisplayString();
+            var lookupKey = originalDef.Contains('<') 
+                ? originalDef.Substring(0, originalDef.IndexOf('<')) 
+                : originalDef;
+
+            if (MutableToImmutable.TryGetValue(lookupKey, out var immutableAlternative))
+            {
+                context.ReportDiagnostic(Diagnostic.Create(
+                    DiagnosticDescriptors.PUR005,
+                    method.ReturnType.GetLocation(),
+                    methodSymbol.Name,
+                    returnType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat),
+                    immutableAlternative));
+            }
+        }
+    }
+
+    #endregion
+
+    #region PUR006 - Parameter Mutation
+
+    /// <summary>
+    /// Method name patterns that typically mutate their target object.
+    /// </summary>
+    private static readonly string[] MutatingMethodNames =
+    [
+        "Add", "AddRange", "Insert", "InsertRange",
+        "Remove", "RemoveAt", "RemoveAll", "RemoveRange", "RemoveWhere",
+        "Clear", "Pop", "Push", "Enqueue", "Dequeue",
+        "Sort", "Reverse", "Shuffle",
+        "Set", "SetValue",
+        "TrimExcess", "EnsureCapacity"
+    ];
+
+    /// <summary>
+    /// PUR006: Detects mutations to parameters within pure methods.
+    /// Catches mutating method calls on parameters and property/field assignments.
+    /// </summary>
+    private static void CheckForParameterMutation(
+        SyntaxNodeAnalysisContext context,
+        MethodDeclarationSyntax method,
+        IMethodSymbol methodSymbol)
+    {
+        var parameterNames = new HashSet<string>(
+            methodSymbol.Parameters
+                .Where(p => !p.Type.IsValueType) // Only check reference types
+                .Select(p => p.Name));
+
+        if (parameterNames.Count == 0)
+            return;
+
+        foreach (var node in method.DescendantNodes())
+        {
+            switch (node)
+            {
+                // Check for mutating method calls on parameters: param.Add(x)
+                case InvocationExpressionSyntax { Expression: MemberAccessExpressionSyntax memberAccess }:
+                    CheckParameterMutatingMethodCall(context, memberAccess, parameterNames, methodSymbol);
+                    break;
+
+                // Check for property setter assignments: param.Property = value
+                case AssignmentExpressionSyntax { Left: MemberAccessExpressionSyntax assignmentTarget }:
+                    CheckParameterPropertyAssignment(context, assignmentTarget, parameterNames, methodSymbol);
+                    break;
+
+                // Check for indexer assignments: param[i] = value
+                case AssignmentExpressionSyntax { Left: ElementAccessExpressionSyntax elementAccess }:
+                    CheckParameterIndexerAssignment(context, elementAccess, parameterNames, methodSymbol);
+                    break;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Checks if an invocation is a mutating method call on a parameter.
+    /// </summary>
+    private static void CheckParameterMutatingMethodCall(
+        SyntaxNodeAnalysisContext context,
+        MemberAccessExpressionSyntax memberAccess,
+        HashSet<string> parameterNames,
+        IMethodSymbol methodSymbol)
+    {
+        // Get the target of the member access (e.g., "list" in "list.Add(x)")
+        var targetName = GetRootIdentifierName(memberAccess.Expression);
+        if (targetName is null || !parameterNames.Contains(targetName))
+            return;
+
+        // Check if the method name is a mutating method
+        var calledMethodName = memberAccess.Name.Identifier.Text;
+        if (!MutatingMethodNames.Contains(calledMethodName))
+            return;
+
+        context.ReportDiagnostic(Diagnostic.Create(
+            DiagnosticDescriptors.PUR006,
+            memberAccess.GetLocation(),
+            methodSymbol.Name,
+            targetName));
+    }
+
+    /// <summary>
+    /// Checks if an assignment targets a property on a parameter.
+    /// </summary>
+    private static void CheckParameterPropertyAssignment(
+        SyntaxNodeAnalysisContext context,
+        MemberAccessExpressionSyntax assignmentTarget,
+        HashSet<string> parameterNames,
+        IMethodSymbol methodSymbol)
+    {
+        var targetName = GetRootIdentifierName(assignmentTarget.Expression);
+        if (targetName is null || !parameterNames.Contains(targetName))
+            return;
+
+        context.ReportDiagnostic(Diagnostic.Create(
+            DiagnosticDescriptors.PUR006,
+            assignmentTarget.GetLocation(),
+            methodSymbol.Name,
+            targetName));
+    }
+
+    /// <summary>
+    /// Checks if an indexer assignment targets a parameter.
+    /// </summary>
+    private static void CheckParameterIndexerAssignment(
+        SyntaxNodeAnalysisContext context,
+        ElementAccessExpressionSyntax elementAccess,
+        HashSet<string> parameterNames,
+        IMethodSymbol methodSymbol)
+    {
+        var targetName = GetRootIdentifierName(elementAccess.Expression);
+        if (targetName is null || !parameterNames.Contains(targetName))
+            return;
+
+        context.ReportDiagnostic(Diagnostic.Create(
+            DiagnosticDescriptors.PUR006,
+            elementAccess.GetLocation(),
+            methodSymbol.Name,
+            targetName));
+    }
+
+    /// <summary>
+    /// Gets the root identifier name from an expression (handles chained member access).
+    /// For "a.b.c" returns "a", for "x" returns "x".
+    /// </summary>
+    private static string? GetRootIdentifierName(ExpressionSyntax expression) =>
+        expression switch
+        {
+            IdentifierNameSyntax identifier => identifier.Identifier.Text,
+            MemberAccessExpressionSyntax memberAccess => GetRootIdentifierName(memberAccess.Expression),
+            _ => null
+        };
+
+    #endregion
+
+    #region PUR007 - Ref/Out Parameters
+
+    /// <summary>
+    /// PUR007: Detects ref/out parameters in pure methods.
+    /// Pure methods should not have ref or out parameters as they allow mutation of caller state.
+    /// </summary>
+    private static void CheckForRefOutParameters(
+        SyntaxNodeAnalysisContext context,
+        IMethodSymbol methodSymbol)
+    {
+        foreach (var parameter in methodSymbol.Parameters)
+        {
+            if (parameter.RefKind is RefKind.Ref or RefKind.Out)
+            {
+                var refKindName = parameter.RefKind == RefKind.Ref ? "ref" : "out";
+                context.ReportDiagnostic(Diagnostic.Create(
+                    DiagnosticDescriptors.PUR007,
+                    parameter.Locations.FirstOrDefault() ?? methodSymbol.Locations.FirstOrDefault(),
+                    methodSymbol.Name,
+                    refKindName,
+                    parameter.Name));
+            }
+        }
+    }
+
+    #endregion
 }
