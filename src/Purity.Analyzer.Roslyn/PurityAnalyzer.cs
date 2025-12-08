@@ -35,6 +35,30 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
         "System.Net.WebClient",
     ];
 
+    /// <summary>
+    /// Members that return non-deterministic values (DateTime.Now, Guid.NewGuid, etc.).
+    /// </summary>
+    private static readonly string[] NonDeterministicMembers =
+    [
+        "System.DateTime.Now",
+        "System.DateTime.UtcNow",
+        "System.DateTime.Today",
+        "System.DateTimeOffset.Now",
+        "System.DateTimeOffset.UtcNow",
+        "System.Guid.NewGuid",
+        "System.Environment.TickCount",
+        "System.Environment.TickCount64",
+        "System.Environment.ProcessId",
+    ];
+
+    /// <summary>
+    /// Types that are inherently non-deterministic (Random).
+    /// </summary>
+    private static readonly string[] NonDeterministicTypes =
+    [
+        "System.Random",
+    ];
+
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
     [
         DiagnosticDescriptors.PUR001,
@@ -67,6 +91,7 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
 
         CheckForFieldMutation(context, methodDeclaration, methodSymbol);
         CheckForIoOperations(context, methodDeclaration, methodSymbol);
+        CheckForNonDeterministicApis(context, methodDeclaration, methodSymbol);
     }
 
     /// <summary>
@@ -185,6 +210,115 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
             return false;
 
         return IoTypePatterns.Any(pattern => containingType.StartsWith(pattern));
+    }
+
+    /// <summary>
+    /// PUR004: Detects non-deterministic API usage within pure methods.
+    /// Catches DateTime.Now, Guid.NewGuid, Random, Environment.TickCount, etc.
+    /// </summary>
+    private static void CheckForNonDeterministicApis(
+        SyntaxNodeAnalysisContext context,
+        MethodDeclarationSyntax method,
+        IMethodSymbol methodSymbol)
+    {
+        foreach (var node in method.DescendantNodes())
+        {
+            switch (node)
+            {
+                case MemberAccessExpressionSyntax memberAccess:
+                    CheckNonDeterministicMemberAccess(context, memberAccess, methodSymbol);
+                    break;
+
+                case ObjectCreationExpressionSyntax creation:
+                    CheckNonDeterministicObjectCreation(context, creation, methodSymbol);
+                    break;
+
+                case InvocationExpressionSyntax invocation:
+                    CheckNonDeterministicInvocation(context, invocation, methodSymbol);
+                    break;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Checks if a member access (property/method) is non-deterministic.
+    /// </summary>
+    private static void CheckNonDeterministicMemberAccess(
+        SyntaxNodeAnalysisContext context,
+        MemberAccessExpressionSyntax memberAccess,
+        IMethodSymbol methodSymbol)
+    {
+        var symbol = context.SemanticModel.GetSymbolInfo(memberAccess).Symbol;
+
+        if (symbol is null)
+            return;
+
+        var fullName = symbol.ContainingType?.ToDisplayString() + "." + symbol.Name;
+
+        if (!NonDeterministicMembers.Contains(fullName))
+            return;
+
+        var diagnostic = Diagnostic.Create(
+            DiagnosticDescriptors.PUR004,
+            memberAccess.GetLocation(),
+            methodSymbol.Name,
+            fullName);
+
+        context.ReportDiagnostic(diagnostic);
+    }
+
+    /// <summary>
+    /// Checks if an object creation is non-deterministic (e.g., new Random()).
+    /// </summary>
+    private static void CheckNonDeterministicObjectCreation(
+        SyntaxNodeAnalysisContext context,
+        ObjectCreationExpressionSyntax creation,
+        IMethodSymbol methodSymbol)
+    {
+        var typeSymbol = context.SemanticModel.GetTypeInfo(creation).Type;
+
+        if (typeSymbol is null)
+            return;
+
+        var typeName = typeSymbol.ToDisplayString();
+
+        if (!NonDeterministicTypes.Contains(typeName))
+            return;
+
+        var diagnostic = Diagnostic.Create(
+            DiagnosticDescriptors.PUR004,
+            creation.GetLocation(),
+            methodSymbol.Name,
+            $"new {typeSymbol.Name}()");
+
+        context.ReportDiagnostic(diagnostic);
+    }
+
+    /// <summary>
+    /// Checks if a method invocation on a non-deterministic type (e.g., random.Next()).
+    /// </summary>
+    private static void CheckNonDeterministicInvocation(
+        SyntaxNodeAnalysisContext context,
+        InvocationExpressionSyntax invocation,
+        IMethodSymbol methodSymbol)
+    {
+        var calledSymbol = context.SemanticModel.GetSymbolInfo(invocation).Symbol as IMethodSymbol;
+
+        if (calledSymbol is null)
+            return;
+
+        var containingType = calledSymbol.ContainingType?.ToDisplayString();
+
+        if (containingType is null || !NonDeterministicTypes.Contains(containingType))
+            return;
+
+        var diagnostic = Diagnostic.Create(
+            DiagnosticDescriptors.PUR004,
+            invocation.GetLocation(),
+            methodSymbol.Name,
+            calledSymbol.ToDisplayString(SymbolDisplayFormat.CSharpShortErrorMessageFormat));
+
+        context.ReportDiagnostic(diagnostic);
     }
 
     /// <summary>
