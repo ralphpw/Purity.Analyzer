@@ -19,7 +19,7 @@ Implementation tasks for Purity.Analyzer.
 | [TASK-008](TASK-008-PUR004-Non-Deterministic.md) | 3h | ✅ Done | Sonnet | Implement PUR004 (non-determinism) |
 | [TASK-017](TASK-017-Whitelist-Compilation.md) | 3h | ✅ Done | **Opus** | Whitelist compilation pipeline |
 | [TASK-006](TASK-006-PUR002-Non-Pure-Calls.md) | 6h | ✅ Done | **Opus** | Implement PUR002 (non-pure calls) |
-| [TASK-015](TASK-015-NuGet-Publish.md) | 2h | Not Started | Sonnet | Package and publish to NuGet |
+| [TASK-015](TASK-015-NuGet-Publish.md) | 2h | ✅ Done | Sonnet | Package and publish to NuGet |
 | TASK-012 | 2h | ✅ Done | Sonnet | Write README.md |
 | [TASK-013](TASK-013-CONTRIBUTING.md) | 1h | ✅ Done | Sonnet | Write CONTRIBUTING.md |
 | [TASK-014](TASK-014-Documentation.md) | 3h | ✅ Done | Sonnet | Create docs/ folder |
