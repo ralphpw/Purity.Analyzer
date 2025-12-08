@@ -48,10 +48,22 @@ internal static class PurityWhitelist
         {
             if (!string.IsNullOrWhiteSpace(line))
             {
-                signatures.Add(line);
+                // Normalize: remove spaces after commas within parentheses for consistent matching
+                var normalized = NormalizeSignature(line);
+                signatures.Add(normalized);
             }
         }
 
         return signatures;
+    }
+
+    /// <summary>
+    /// Normalizes a signature by removing spaces after commas within parameter lists.
+    /// This handles format variations in the whitelist markdown files.
+    /// </summary>
+    private static string NormalizeSignature(string signature)
+    {
+        // Simple approach: replace ", " with "," within the signature
+        return signature.Replace(", ", ",");
     }
 }

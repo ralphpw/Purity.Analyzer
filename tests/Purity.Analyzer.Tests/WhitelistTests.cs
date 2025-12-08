@@ -48,6 +48,27 @@ public sealed class WhitelistTests
     }
 
     [Theory]
+    [InlineData("System.Guid.Parse(System.String)")]
+    [InlineData("System.Guid.TryParse(System.String,System.Guid@)")]
+    [InlineData("System.Guid.ToString()")]
+    [InlineData("System.Guid.Equals(System.Guid)")]
+    [InlineData("System.Guid.GetHashCode()")]
+    public void IsWhitelisted_GuidMethods_ReturnsTrue(string signature)
+    {
+        Assert.True(PurityWhitelist.IsWhitelisted(signature));
+    }
+
+    [Theory]
+    [InlineData("System.Object.ToString()")]
+    [InlineData("System.Object.GetHashCode()")]
+    [InlineData("System.Object.Equals(System.Object)")]
+    [InlineData("System.Object.ReferenceEquals(System.Object,System.Object)")]
+    public void IsWhitelisted_ObjectMethods_ReturnsTrue(string signature)
+    {
+        Assert.True(PurityWhitelist.IsWhitelisted(signature));
+    }
+
+    [Theory]
     [InlineData("System.Math.E")]
     [InlineData("System.Math.PI")]
     [InlineData("System.Math.Tau")]
