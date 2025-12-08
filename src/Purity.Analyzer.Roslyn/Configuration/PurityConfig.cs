@@ -24,8 +24,13 @@ public sealed record PurityConfig
     public ImmutableHashSet<string> ReviewRequired { get; init; } = ImmutableHashSet<string>.Empty;
 
     /// <summary>
-    /// When true, generates a pending-review.json manifest file listing all review-required calls.
+    /// Reserved for future use. When true, generates a pending-review.json manifest file.
+    /// Currently deferred; users can capture PUR011 diagnostics via build tooling.
     /// </summary>
+    /// <remarks>
+    /// Roslyn analyzers cannot write files during analysis. This feature is planned
+    /// for a future version via MSBuild task or CLI tool integration.
+    /// </remarks>
     public bool OutputPendingReview { get; init; } = false;
 
     /// <summary>

@@ -70,6 +70,9 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
         DiagnosticDescriptors.PUR005,
         DiagnosticDescriptors.PUR006,
         DiagnosticDescriptors.PUR007,
+        DiagnosticDescriptors.PUR008,
+        DiagnosticDescriptors.PUR009,
+        DiagnosticDescriptors.PUR010,
         DiagnosticDescriptors.PUR011
     ];
 
@@ -107,6 +110,9 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
         CheckForMutableReturnType(context, methodDeclaration, methodSymbol);
         CheckForParameterMutation(context, methodDeclaration, methodSymbol);
         CheckForRefOutParameters(context, methodSymbol);
+        CheckForUnsafeCode(context, methodDeclaration, methodSymbol);
+        CheckForReflection(context, methodDeclaration, methodSymbol);
+        CheckForExceptionControlFlow(context, methodDeclaration, methodSymbol);
     }
 
     /// <summary>
@@ -900,6 +906,188 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
                     methodSymbol.Name,
                     refKindName,
                     parameter.Name));
+            }
+        }
+    }
+
+    #endregion
+
+    #region PUR008 - Unsafe Code
+
+    /// <summary>
+    /// PUR008: Detects unsafe code in pure methods.
+    /// Unsafe code can bypass type safety and perform arbitrary memory manipulation.
+    /// </summary>
+    private static void CheckForUnsafeCode(
+        SyntaxNodeAnalysisContext context,
+        MethodDeclarationSyntax method,
+        IMethodSymbol methodSymbol)
+    {
+        // Check if method itself is marked unsafe
+        if (method.Modifiers.Any(SyntaxKind.UnsafeKeyword))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                DiagnosticDescriptors.PUR008,
+                method.Identifier.GetLocation(),
+                methodSymbol.Name));
+            return;
+        }
+
+        // Check for unsafe blocks, fixed statements, pointer types
+        foreach (var node in method.DescendantNodes())
+        {
+            switch (node)
+            {
+                case UnsafeStatementSyntax unsafeStatement:
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        DiagnosticDescriptors.PUR008,
+                        unsafeStatement.UnsafeKeyword.GetLocation(),
+                        methodSymbol.Name));
+                    break;
+
+                case FixedStatementSyntax fixedStatement:
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        DiagnosticDescriptors.PUR008,
+                        fixedStatement.FixedKeyword.GetLocation(),
+                        methodSymbol.Name));
+                    break;
+
+                case PointerTypeSyntax pointerType:
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        DiagnosticDescriptors.PUR008,
+                        pointerType.GetLocation(),
+                        methodSymbol.Name));
+                    break;
+            }
+        }
+    }
+
+    #endregion
+
+    #region PUR009 - Reflection
+
+    /// <summary>
+    /// Reflection types/methods that violate purity.
+    /// </summary>
+    private static readonly string[] ReflectionPatterns =
+    [
+        "System.Type.GetType",
+        "System.Type.GetMethod",
+        "System.Type.GetProperty",
+        "System.Type.GetField",
+        "System.Type.GetConstructor",
+        "System.Type.GetMember",
+        "System.Type.GetMethods",
+        "System.Type.GetProperties",
+        "System.Type.GetFields",
+        "System.Type.GetConstructors",
+        "System.Type.GetMembers",
+        "System.Reflection.Assembly.Load",
+        "System.Reflection.Assembly.LoadFrom",
+        "System.Reflection.Assembly.LoadFile",
+        "System.Reflection.Assembly.GetTypes",
+        "System.Reflection.Assembly.GetType",
+        "System.Reflection.MethodBase.Invoke",
+        "System.Reflection.MethodInfo.Invoke",
+        "System.Reflection.ConstructorInfo.Invoke",
+        "System.Reflection.PropertyInfo.SetValue",
+        "System.Reflection.PropertyInfo.GetValue",
+        "System.Reflection.FieldInfo.SetValue",
+        "System.Reflection.FieldInfo.GetValue",
+        "System.Activator.CreateInstance",
+    ];
+
+    /// <summary>
+    /// PUR009: Detects reflection usage in pure methods.
+    /// Reflection can bypass compile-time checks and perform side effects.
+    /// </summary>
+    private static void CheckForReflection(
+        SyntaxNodeAnalysisContext context,
+        MethodDeclarationSyntax method,
+        IMethodSymbol methodSymbol)
+    {
+        foreach (var invocation in method.DescendantNodes().OfType<InvocationExpressionSyntax>())
+        {
+            var calledSymbol = context.SemanticModel.GetSymbolInfo(invocation).Symbol as IMethodSymbol;
+            if (calledSymbol is null)
+                continue;
+
+            var containingType = calledSymbol.ContainingType?.ToDisplayString();
+            if (containingType is null)
+                continue;
+
+            var fullName = containingType + "." + calledSymbol.Name;
+            
+            if (ReflectionPatterns.Any(pattern => fullName == pattern))
+            {
+                context.ReportDiagnostic(Diagnostic.Create(
+                    DiagnosticDescriptors.PUR009,
+                    invocation.GetLocation(),
+                    methodSymbol.Name,
+                    calledSymbol.ToDisplayString(SymbolDisplayFormat.CSharpShortErrorMessageFormat)));
+            }
+        }
+    }
+
+    #endregion
+
+    #region PUR010 - Exception Control Flow
+
+    /// <summary>
+    /// Methods that throw exceptions for expected failures (control flow).
+    /// These are warnings, not errors.
+    /// </summary>
+    private static readonly string[] ExceptionControlFlowMethods =
+    [
+        "System.Int32.Parse",
+        "System.Int64.Parse",
+        "System.Double.Parse",
+        "System.Decimal.Parse",
+        "System.Single.Parse",
+        "System.DateTime.Parse",
+        "System.DateTimeOffset.Parse",
+        "System.Guid.Parse",
+        "System.Enum.Parse",
+        "System.Convert.ToInt32",
+        "System.Convert.ToInt64",
+        "System.Convert.ToDouble",
+        "System.Convert.ToDecimal",
+        "System.Convert.ToDateTime",
+    ];
+
+    /// <summary>
+    /// PUR010: Warns about methods that throw exceptions for control flow.
+    /// Suggests using TryParse patterns instead.
+    /// </summary>
+    private static void CheckForExceptionControlFlow(
+        SyntaxNodeAnalysisContext context,
+        MethodDeclarationSyntax method,
+        IMethodSymbol methodSymbol)
+    {
+        foreach (var invocation in method.DescendantNodes().OfType<InvocationExpressionSyntax>())
+        {
+            var calledSymbol = context.SemanticModel.GetSymbolInfo(invocation).Symbol as IMethodSymbol;
+            if (calledSymbol is null)
+                continue;
+
+            // Build fully qualified CLR name using metadata (System.Int32 not int)
+            var containingType = calledSymbol.ContainingType;
+            if (containingType is null)
+                continue;
+
+            var containingNamespace = containingType.ContainingNamespace?.ToDisplayString();
+            var typeName = containingType.MetadataName; // Always returns CLR name (Int32, not int)
+            var fullName = string.IsNullOrEmpty(containingNamespace)
+                ? typeName + "." + calledSymbol.Name
+                : containingNamespace + "." + typeName + "." + calledSymbol.Name;
+            
+            if (ExceptionControlFlowMethods.Contains(fullName))
+            {
+                context.ReportDiagnostic(Diagnostic.Create(
+                    DiagnosticDescriptors.PUR010,
+                    invocation.GetLocation(),
+                    methodSymbol.Name,
+                    calledSymbol.ToDisplayString(SymbolDisplayFormat.CSharpShortErrorMessageFormat)));
             }
         }
     }

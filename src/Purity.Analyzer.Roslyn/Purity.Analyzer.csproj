@@ -27,7 +27,6 @@
     <PackageTags>roslyn;analyzer;purity;functional;immutable;csharp;side-effects</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageReleaseNotes>v0.2.0: Full purity verification with user configuration and trust modes</PackageReleaseNotes>
-    <DevelopmentDependency>true</DevelopmentDependency>
     <NoPackageAnalysis>true</NoPackageAnalysis>
   </PropertyGroup>
 

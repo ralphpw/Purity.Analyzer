@@ -96,6 +96,42 @@ public static class DiagnosticDescriptors
         helpLinkUri: $"{HelpLinkBase}#pur007");
 
     /// <summary>
+    /// PUR008: Pure method uses unsafe code.
+    /// </summary>
+    public static readonly DiagnosticDescriptor PUR008 = new(
+        id: "PUR008",
+        title: "Pure method uses unsafe code",
+        messageFormat: "Method '{0}' marked as pure uses unsafe code",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        helpLinkUri: $"{HelpLinkBase}#pur008");
+
+    /// <summary>
+    /// PUR009: Pure method uses reflection.
+    /// </summary>
+    public static readonly DiagnosticDescriptor PUR009 = new(
+        id: "PUR009",
+        title: "Pure method uses reflection",
+        messageFormat: "Method '{0}' marked as pure uses reflection via '{1}'",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        helpLinkUri: $"{HelpLinkBase}#pur009");
+
+    /// <summary>
+    /// PUR010: Pure method uses exception for control flow.
+    /// </summary>
+    public static readonly DiagnosticDescriptor PUR010 = new(
+        id: "PUR010",
+        title: "Pure method may throw for control flow",
+        messageFormat: "Method '{0}' marked as pure calls '{1}' which may throw for control flow",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        helpLinkUri: $"{HelpLinkBase}#pur010");
+
+    /// <summary>
     /// PUR011: Method is whitelisted but marked for review.
     /// </summary>
     public static readonly DiagnosticDescriptor PUR011 = new(

@@ -320,7 +320,11 @@ public class PUR004_NonDeterministicTests
             }
             """;
 
-        await CSharpAnalyzerVerifier<PurityAnalyzer>.VerifyAnalyzerAsync(code);
+        // Guid.Parse is pure (whitelisted) so no PUR004, but it throws so it triggers PUR010
+        await CSharpAnalyzerVerifier<PurityAnalyzer>.VerifyAnalyzerAsync(code,
+            CSharpAnalyzerVerifier<PurityAnalyzer>.Diagnostic(DiagnosticDescriptors.PUR010)
+                .WithSpan(9, 16, 9, 29)
+                .WithArguments("Good", "Guid.Parse(string)"));
     }
 
     [Fact]
