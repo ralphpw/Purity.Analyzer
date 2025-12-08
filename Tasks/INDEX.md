@@ -11,7 +11,7 @@ Implementation tasks for Purity.Analyzer.
 | Task | Estimate | Status | Suggested LLM | Description |
 |------|----------|--------|---------------|-------------|
 | [TASK-001](TASK-001-Initialize-Repository.md) | 1h | ✅ Done | Sonnet | Initialize repository and CI |
-| [TASK-002](TASK-002-Create-EnforcedPureAttribute.md) | 30m | Not Started | Sonnet | Create `[EnforcedPure]` attribute |
+| [TASK-002](TASK-002-Create-EnforcedPureAttribute.md) | 30m | ✅ Done | Sonnet | Create `[EnforcedPure]` attribute |
 | [TASK-003](TASK-003-Analyzer-Skeleton.md) | 2h | Not Started | **Opus** | Set up Roslyn analyzer skeleton |
 | [TASK-004](TASK-004-Test-Infrastructure.md) | 2h | Not Started | **Opus** | Set up unit test infrastructure |
 | [TASK-005](TASK-005-PUR001-Field-Mutation.md) | 4h | Not Started | Sonnet | Implement PUR001 (field mutation) |
