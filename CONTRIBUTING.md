@@ -1,6 +1,6 @@
 # Contributing to Purity.Analyzer
 
-Thank you for your interest in contributing! This guide will help you get started.
+Thank you for your interest in contributing! This guide will help you get started. See [docs/](docs/) for detailed specifications.
 
 ---
 

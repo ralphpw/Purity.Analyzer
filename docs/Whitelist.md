@@ -288,7 +288,7 @@ Controls trust mode and exclusions (not inclusions—those go in whitelist files
 }
 ```
 
-A template is provided at [`.purity/config.template.json`](../.purity/config.template.json).
+Templates: [`.purity/config.template.json`](../.purity/config.template.json), [`.purity/whitelist/_template.md`](../.purity/whitelist/_template.md)
 
 ### Trust Modes
 

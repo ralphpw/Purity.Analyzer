@@ -1,91 +1,105 @@
 # Task Index
 
-Implementation tasks for Purity.Analyzer v0.1.0 (MVP).
+Implementation tasks for Purity.Analyzer.
 
 ---
 
-## Priority Legend
+## v0.1.0 — Core MVP (First Usable Release)
 
-- **P0** — MVP-critical, must complete
-- **P1** — Nice-to-have for MVP, can defer
+**Goal:** Catch the most common purity violations with minimal whitelist.
 
----
+| Task | Estimate | Status | Suggested LLM | Description |
+|------|----------|--------|---------------|-------------|
+| [TASK-001](TASK-001-Initialize-Repository.md) | 1h | Not Started | Sonnet | Initialize repository and CI |
+| [TASK-002](TASK-002-Create-EnforcedPureAttribute.md) | 30m | Not Started | Sonnet | Create `[EnforcedPure]` attribute |
+| [TASK-003](TASK-003-Analyzer-Skeleton.md) | 2h | Not Started | **Opus** | Set up Roslyn analyzer skeleton |
+| [TASK-004](TASK-004-Test-Infrastructure.md) | 2h | Not Started | **Opus** | Set up unit test infrastructure |
+| [TASK-005](TASK-005-PUR001-Field-Mutation.md) | 4h | Not Started | Sonnet | Implement PUR001 (field mutation) |
+| [TASK-007](TASK-007-PUR003-IO-Detection.md) | 3h | Not Started | Sonnet | Implement PUR003 (I/O detection) |
+| [TASK-008](TASK-008-PUR004-Non-Deterministic.md) | 3h | Not Started | Sonnet | Implement PUR004 (non-determinism) |
+| [TASK-017](TASK-017-Whitelist-Compilation.md) | 3h | Not Started | **Opus** | Whitelist compilation pipeline |
+| [TASK-006](TASK-006-PUR002-Non-Pure-Calls.md) | 6h | Not Started | **Opus** | Implement PUR002 (non-pure calls) |
+| [TASK-015](TASK-015-NuGet-Publish.md) | 2h | Not Started | Sonnet | Package and publish to NuGet |
+| TASK-012 | 2h | ✅ Done | Sonnet | Write README.md |
+| [TASK-013](TASK-013-CONTRIBUTING.md) | 1h | ✅ Done | Sonnet | Write CONTRIBUTING.md |
+| [TASK-014](TASK-014-Documentation.md) | 3h | ✅ Done | Sonnet | Create docs/ folder |
 
-## Task Summary
-
-| Task | Priority | Estimate | Status | Description |
-|------|----------|----------|--------|-------------|
-| [TASK-001](TASK-001-Initialize-Repository.md) | P0 | 1h | Not Started | Initialize repository and CI |
-| [TASK-002](TASK-002-Create-EnforcedPureAttribute.md) | P0 | 30m | Not Started | Create `[EnforcedPure]` attribute |
-| [TASK-003](TASK-003-Analyzer-Skeleton.md) | P0 | 2h | Not Started | Set up Roslyn analyzer skeleton |
-| [TASK-004](TASK-004-Test-Infrastructure.md) | P0 | 2h | Not Started | Set up unit test infrastructure |
-| [TASK-005](TASK-005-PUR001-Field-Mutation.md) | P0 | 4h | Not Started | Implement PUR001 (field mutation) |
-| [TASK-006](TASK-006-PUR002-Non-Pure-Calls.md) | P0 | 6h | Not Started | Implement PUR002 (non-pure calls) |
-| [TASK-007](TASK-007-PUR003-IO-Detection.md) | P0 | 3h | Not Started | Implement PUR003 (I/O detection) |
-| [TASK-008](TASK-008-PUR004-Non-Deterministic.md) | P0 | 3h | Not Started | Implement PUR004 (non-determinism) |
-| [TASK-009](TASK-009-PUR005-Mutable-Return.md) | P0 | 4h | Not Started | Implement PUR005 (mutable returns) |
-| [TASK-010](TASK-010-PUR006-Parameter-Mutation.md) | P1 | 3h | Not Started | Implement PUR006 (param mutation) |
-| [TASK-011](TASK-011-PUR007-Ref-Out-Params.md) | P1 | 2h | Not Started | Implement PUR007 (ref/out params) |
-| TASK-012 | P0 | 2h | ✅ Done | Write README.md |
-| [TASK-013](TASK-013-CONTRIBUTING.md) | P1 | 1h | ✅ Done | Write CONTRIBUTING.md |
-| [TASK-014](TASK-014-Documentation.md) | P1 | 3h | ✅ Done | Create docs/ folder |
-| [TASK-015](TASK-015-NuGet-Publish.md) | P0 | 2h | Not Started | Package and publish to NuGet |
-| [TASK-016](TASK-016-Announce.md) | P1 | 2h | Not Started | Announce v0.1.0 |
-| [TASK-017](TASK-017-Whitelist-Compilation.md) | P0 | 3h | Not Started | Whitelist compilation pipeline |
-| [TASK-018](TASK-018-User-Configuration.md) | P1 | 6h | Not Started | User config & trust modes |
+**Total:** 10 tasks, ~29h remaining  
+**Opus tasks:** 4 (infrastructure, complex logic)  
+**Sonnet tasks:** 6 (straightforward diagnostics, docs)
 
 ---
 
-## Effort Summary
+## v0.2.0 — Full Verification (Production-Ready)
 
-| Priority | Tasks | Estimated Hours |
-|----------|-------|-----------------|
-| P0 | 12 tasks | ~31h |
-| P1 | 6 tasks | ~17h |
-| **Total** | 18 tasks | ~48h |
+**Goal:** Complete diagnostic coverage, user config, and trust modes.
+
+| Task | Estimate | Status | Suggested LLM | Description |
+|------|----------|--------|---------------|-------------|
+| [TASK-009](TASK-009-PUR005-Mutable-Return.md) | 4h | Not Started | Sonnet | Implement PUR005 (mutable returns) |
+| [TASK-010](TASK-010-PUR006-Parameter-Mutation.md) | 3h | Not Started | Sonnet | Implement PUR006 (param mutation) |
+| [TASK-011](TASK-011-PUR007-Ref-Out-Params.md) | 2h | Not Started | Sonnet | Implement PUR007 (ref/out params) |
+| [TASK-018](TASK-018-User-Configuration.md) | 6h | Not Started | **Opus** | User config & trust modes |
+| [TASK-016](TASK-016-Announce.md) | 2h | Not Started | Sonnet | Announce v0.2.0 |
+
+**Total:** 5 tasks, ~17h  
+**Opus tasks:** 1 (complex config system)  
+**Sonnet tasks:** 4 (pattern-matching diagnostics)
+
+---
+
+## LLM Selection Rationale
+
+**Use Opus (3x cost) for:**
+- Architecture/infrastructure setup (TASK-003, TASK-004)
+- Complex algorithms requiring deep reasoning (TASK-006 call-graph analysis, TASK-017 compilation)
+- Multi-system integration (TASK-018 config system)
+
+**Use Sonnet for:**
+- Pattern-matching diagnostics (PUR001, 003, 004, 005, 006, 007, 009, 010, 011)
+- Documentation/boilerplate (TASK-001, 002, 012, 013, 014, 015, 016)
+- Well-defined transformations with clear examples
+
+---
+
+## Implementation Order (v0.1.0)
+
+Dependencies require this sequence:
+
+1. **TASK-001** — Initialize repository (foundation)
+2. **TASK-002** — Create attribute (API surface)
+3. **TASK-003** — Analyzer skeleton (registration, infrastructure)
+4. **TASK-004** — Test infrastructure (validate as we build)
+5. **TASK-005** — PUR001 (field mutation) — simplest diagnostic, proves the pipeline works
+6. **TASK-007** — PUR003 (I/O detection) — high-impact, independent
+7. **TASK-008** — PUR004 (non-determinism) — easy win, independent
+8. **TASK-017** — Whitelist compilation — required before PUR002
+9. **TASK-006** — PUR002 (non-pure calls) — depends on whitelist, enables transitive checking
+10. **TASK-015** — NuGet publish — ship it
 
 ---
 
 ## Dependency Graph
 
 ```
-TASK-001 (repo)
-    ├── TASK-002 (attribute)
-    │       └── TASK-003 (analyzer) ─┬─ TASK-005 (PUR001)
-    │                                ├─ TASK-006 (PUR002) ──► TASK-018 (config)
-    │                                ├─ TASK-007 (PUR003)
-    │                                ├─ TASK-008 (PUR004)
-    │                                ├─ TASK-009 (PUR005)
-    │                                ├─ TASK-010 (PUR006)
-    │                                └─ TASK-011 (PUR007)
-    │
-    ├── TASK-004 (tests) ────────────┘
-    │
-    └── TASK-017 (whitelist compile)
+v0.1.0 (Core MVP)
+┌─────────────────────────────────────────────────────────────┐
+│ TASK-001 (repo)                                             │
+│    ├── TASK-002 (attribute)                                 │
+│    │      └── TASK-003 (analyzer) ─┬─ TASK-005 (PUR001)    │
+│    │                                ├─ TASK-007 (PUR003)    │
+│    │                                └─ TASK-008 (PUR004)    │
+│    ├── TASK-004 (tests) ───────────┘                        │
+│    └── TASK-017 (whitelist) ──► TASK-006 (PUR002)          │
+│                                                              │
+│ All above ──► TASK-015 (NuGet)                              │
+└─────────────────────────────────────────────────────────────┘
 
-TASK-012 (README) ✅
-TASK-013 (CONTRIBUTING) ✅
-TASK-014 (docs/) ✅
-
-All P0 tasks ──► TASK-015 (NuGet) ──► TASK-016 (Announce)
+v0.2.0 (Full Verification)
+┌─────────────────────────────────────────────────────────────┐
+│ TASK-009 (PUR005) ─┬                                        │
+│ TASK-010 (PUR006) ─┼─► TASK-016 (Announce)                 │
+│ TASK-011 (PUR007) ─┤                                        │
+│ TASK-018 (config) ─┘                                        │
+└─────────────────────────────────────────────────────────────┘
 ```
-
----
-
-## Suggested Order
-
-1. **TASK-001** — Initialize repository
-2. **TASK-002** — Create attribute
-3. **TASK-003** — Analyzer skeleton
-4. **TASK-004** — Test infrastructure
-5. **TASK-017** — Whitelist compilation pipeline
-6. **TASK-005** — PUR001 (field mutation)
-7. **TASK-006** — PUR002 (non-pure calls)
-8. **TASK-007** — PUR003 (I/O)
-9. **TASK-008** — PUR004 (non-determinism)
-10. **TASK-009** — PUR005 (mutable returns)
-11. **TASK-010** — PUR006 (param mutation) [P1]
-12. **TASK-011** — PUR007 (ref/out) [P1]
-13. **TASK-018** — User config & trust modes [P1]
-14. **TASK-015** — NuGet publish
-15. **TASK-016** — Announce [P1]

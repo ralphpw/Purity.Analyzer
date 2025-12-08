@@ -139,7 +139,7 @@ Purity.Analyzer is a **pragmatic heuristic tool**, not a formal proof system. It
 
 **Philosophy:** If 80% of purity violations are caught at compile time, that's a massive improvement over 0%. The whitelist + suppressions give you escape hatches when the analyzer is wrong.
 
-This is not an academic proof of correctness—it's a **useful guardrail** that makes functional C# safer and more maintainable.
+Not an academic proof of correctness—a **useful guardrail** that makes functional C# safer and more maintainable.
 
 ## Roadmap
 
