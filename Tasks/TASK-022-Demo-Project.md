@@ -1,8 +1,8 @@
 # TASK-022: Create Demo/Sample Project
 
-**Status:** Not Started  
+**Status:** ✅ Complete  
 **Priority:** Medium  
-**Milestone:** v0.2.1  
+**Milestone:** v0.2.0  
 
 ## Objective
 

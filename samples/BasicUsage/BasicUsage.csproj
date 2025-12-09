@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <!-- Standard NuGet package reference (what end users see) -->
+  <ItemGroup>
+    <PackageReference Include="Purity.Analyzer" Version="0.2.0" />
+  </ItemGroup>
+
+  <!-- Alternative: For local development with ThreatLocker/security tools, use project references -->
+  <!--
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Purity.Analyzer.Roslyn\Purity.Analyzer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\src\Purity.Analyzer.Attributes\Purity.Analyzer.Attributes.csproj" />
+  </ItemGroup>
+  -->
+
+  <!-- Exclude violation demos from build by default -->
+  <ItemGroup>
+    <Compile Remove="ViolationDemos.cs" />
+    <None Include="ViolationDemos.cs" />
+  </ItemGroup>
+
+</Project>
