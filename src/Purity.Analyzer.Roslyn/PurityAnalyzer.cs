@@ -62,19 +62,19 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
     ];
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
-    [
-        DiagnosticDescriptors.PUR001,
-        DiagnosticDescriptors.PUR002,
-        DiagnosticDescriptors.PUR003,
-        DiagnosticDescriptors.PUR004,
-        DiagnosticDescriptors.PUR005,
-        DiagnosticDescriptors.PUR006,
-        DiagnosticDescriptors.PUR007,
-        DiagnosticDescriptors.PUR008,
-        DiagnosticDescriptors.PUR009,
-        DiagnosticDescriptors.PUR010,
-        DiagnosticDescriptors.PUR011
-    ];
+        ImmutableArray.Create(
+            DiagnosticDescriptors.PUR001,
+            DiagnosticDescriptors.PUR002,
+            DiagnosticDescriptors.PUR003,
+            DiagnosticDescriptors.PUR004,
+            DiagnosticDescriptors.PUR005,
+            DiagnosticDescriptors.PUR006,
+            DiagnosticDescriptors.PUR007,
+            DiagnosticDescriptors.PUR008,
+            DiagnosticDescriptors.PUR009,
+            DiagnosticDescriptors.PUR010,
+            DiagnosticDescriptors.PUR011
+        );
 
     public override void Initialize(AnalysisContext context)
     {

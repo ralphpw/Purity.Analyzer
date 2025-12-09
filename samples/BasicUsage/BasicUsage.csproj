@@ -8,18 +8,18 @@
   </PropertyGroup>
 
   <!-- Standard NuGet package reference (what end users see) -->
-  <ItemGroup>
-    <PackageReference Include="Purity.Analyzer" Version="0.2.0" />
-  </ItemGroup>
-
-  <!-- Alternative: For local development with ThreatLocker/security tools, use project references -->
   <!--
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Purity.Analyzer.Roslyn\Purity.Analyzer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-    <ProjectReference Include="..\..\src\Purity.Analyzer.Attributes\Purity.Analyzer.Attributes.csproj" />
+    <PackageReference Include="Purity.Analyzer" Version="1.0.0" />
   </ItemGroup>
   -->
 
+  <!-- Alternative: For local development with ThreatLocker/security tools, use project references -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Purity.Analyzer.Roslyn\Purity.Analyzer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\src\Purity.Analyzer.Attributes\Purity.Analyzer.Attributes.csproj" />
+  </ItemGroup>   
+  
   <!-- Exclude violation demos from build by default -->
   <ItemGroup>
     <Compile Remove="ViolationDemos.cs" />
