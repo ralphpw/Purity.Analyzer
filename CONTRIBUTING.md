@@ -45,6 +45,20 @@ Purity.Analyzer/
 
 ---
 
+## Troubleshooting Tests
+
+**Tests fail to build or run?**
+
+Ensure you have .NET 8 SDK or later installed:
+
+```bash
+dotnet --version
+```
+
+If you have only older .NET versions, [download .NET 8 or later](https://dotnet.microsoft.com/download/dotnet).
+
+---
+
 ## Code Style
 
 Follow the guidelines in [.github/LLMStyleGuideline.md](../.github/LLMStyleGuideline.md).
